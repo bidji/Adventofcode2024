@@ -17,7 +17,7 @@ class Move(IntFlag):
             case Move.LEFT:
                 return Move.UP
 
-directions = [{'y': -1, 'x': 0}, {'y': 0, 'x': 1}, {'y': 1, 'x': 0}, {'y': 0, 'x': -1}]
+directions = {1: {'y': -1, 'x': 0}, 2: {'y': 0, 'x': 1}, 4: {'y': 1, 'x': 0}, 8: {'y': 0, 'x': -1}}
 
 def load_grid_and_start(filename: str) -> tuple[list[str], list[list[Move]], int, int]:
     grid = []
@@ -42,7 +42,7 @@ def load_grid_and_start(filename: str) -> tuple[list[str], list[list[Move]], int
 
 def find_distinct_positions(filename: str) -> int:
     grid, _, guardy, guardx = load_grid_and_start(filename)
-    direction = 0
+    direction = Move.UP
     nb = 1
     while True:
         # try to move it
@@ -54,9 +54,9 @@ def find_distinct_positions(filename: str) -> int:
         next = grid[nexty][nextx]
         match next:
             case '#':
-                # a wall, next direction or first direction if already last direction
+                # a wall, next direction
                 # and no move
-                direction = (direction + 1) % len(directions)
+                direction = direction.turn()
             case '.':
                 # a new position, add it and move
                 nb += 1
@@ -81,8 +81,7 @@ def is_loop(grid, moves, starty: int, startx: int, wally: int, wallx: int):
 
 def find_loops(filename: str) -> int:
     grid, moves, guardy, guardx = load_grid_and_start(filename)
-    direction = 0
-    move = Move.UP
+    direction = Move.UP
     nb = 0
     while True:
         # try to move it
@@ -97,7 +96,7 @@ def find_loops(filename: str) -> int:
                 # a wall, next direction or first direction if already last direction
                 # no move and no search for a loop with a new wall
                 # we add a new direction in moves
-                direction = (direction + 1) % len(directions)
+                direction = direction.turn()
                 moves[guardy][guardx] = moves[guardy][guardx] | moves[guardy][guardx].turn()
             case '.':
                 # a new position, add it and move
