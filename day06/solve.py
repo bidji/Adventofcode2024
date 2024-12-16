@@ -24,12 +24,15 @@ def load_grid_and_start(filename: str) -> tuple[list[str], list[list[Move]], int
     starty, startx = 0, 0
     guard_found = False
     moves = []
+    fake_walls = []
     with open(filename, 'r') as datafile:
         for line in datafile.readlines():
             grid.append(line.strip())
             moves.append([])
+            fake_walls.append([])
             for x in range(0, len(line.strip())):
                 moves[-1].append(0)
+                fake_walls[-1].append(0)
             if not guard_found:
                 if '^' in line:
                     startx = line.index('^')
@@ -37,10 +40,10 @@ def load_grid_and_start(filename: str) -> tuple[list[str], list[list[Move]], int
                     guard_found = True
                 else:
                     starty += 1
-    return grid, moves, starty, startx
+    return grid, starty, startx, moves, fake_walls
 
 def find_distinct_positions(filename: str) -> int:
-    grid, _, guardy, guardx = load_grid_and_start(filename)
+    grid, guardy, guardx, _, _ = load_grid_and_start(filename)
     grid[guardy] = grid[guardy][:guardx] + 'X' + grid[guardy][guardx+1:]
     direction = Move.UP
     nb = 1
@@ -72,44 +75,49 @@ def copy_moves(original_moves):
         new_moves.append(raw.copy())
     return new_moves
 
-def is_loop(grid, moves, guardy: int, guardx: int, direction: Move) -> bool:
+def is_loop(grid, guardy: int, guardx: int, direction: Move, moves, fake_walls) -> bool:
+    new_guardy, new_guardx = guardy, guardx
     # inserting fake wall in front of guard
-    wally = guardy + directions[direction]['y']
-    wallx = guardx + directions[direction]['x']
+    wally = new_guardy + directions[direction]['y']
+    wallx = new_guardx + directions[direction]['x']
     if wally < 0 or wally >= len(grid) or wallx < 0 or wallx >= len(grid[0]):
         return False
     if grid[wally][wallx] == '#':
         return False
+    if fake_walls[wally][wallx] == 1:
+        return False
     new_grid = grid.copy()
     new_grid[wally] = new_grid[wally][:wallx] + '#' + new_grid[wally][wallx+1:]
     new_moves = copy_moves(moves)
-    direction = direction.turn()
+    new_direction = direction.turn()
     
     while True:
         # try to move
-        nexty = guardy + directions[direction]['y']
-        nextx = guardx + directions[direction]['x']
-        if nexty < 0 or nexty >= len(grid) or nextx < 0 or nextx >= len(grid[0]):
+        nexty = new_guardy + directions[new_direction]['y']
+        nextx = new_guardx + directions[new_direction]['x']
+        if nexty < 0 or nexty >= len(new_grid) or nextx < 0 or nextx >= len(new_grid[0]):
             # guard outbounds after this move
             return False
-        if direction & new_moves[nexty][nextx]:
+        if new_direction & new_moves[nexty][nextx]:
             # guard on his tracks
+            fake_walls[wally][wallx] = 1
             return True
-        next = grid[nexty][nextx]
+        next = new_grid[nexty][nextx]
         match next:
             case '#':
                 # a wall, turn
-                direction = direction.turn()
-                new_moves[guardy][guardx] = new_moves[guardy][guardx] | direction
+                new_direction = new_direction.turn()
+                new_moves[new_guardy][new_guardx] = new_moves[new_guardy][new_guardx] | new_direction
             case '.':
                 # not a wall, move
-                new_moves[nexty][nextx] = new_moves[nexty][nextx] | direction
-                guardy, guardx = nexty, nextx
+                new_moves[nexty][nextx] = new_moves[nexty][nextx] | new_direction
+                new_guardy, new_guardx = nexty, nextx
 
 def find_loops(filename: str) -> int:
-    grid, moves, guardy, guardx = load_grid_and_start(filename)
+    grid, guardy, guardx, moves, fake_walls = load_grid_and_start(filename)
     grid[guardy] = grid[guardy][:guardx] + '.' + grid[guardy][guardx+1:]
     direction = Move.UP
+    
     nb = 0
     while True:
         # try to move it
@@ -125,14 +133,14 @@ def find_loops(filename: str) -> int:
                 direction = direction.turn()
                 moves[guardy][guardx] = moves[guardy][guardx] | direction
                 # check if it's possible to create a loop with a wall in front of guard
-                if is_loop(grid, moves, guardy, guardx, direction):
+                if is_loop(grid, guardy, guardx, direction, moves, fake_walls):
                     nb += 1
             case '.':
                 # not a wall, move
                 guardy, guardx = nexty, nextx
                 moves[guardy][guardx] = moves[guardy][guardx] | direction
                 # check if it's possible to create a loop with a wall in front of guard
-                if is_loop(grid, moves, guardy, guardx, direction):
+                if is_loop(grid, guardy, guardx, direction, moves, fake_walls):
                     nb += 1
     return nb
             
