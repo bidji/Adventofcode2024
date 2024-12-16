@@ -2,26 +2,33 @@ import math
 import re
 
 def load(filename: str):
-    blocks = ""
+    blocks = []
     
     with open(filename, 'r') as filedata:
         diskmap = filedata.read().strip()
         for id in range(0, math.ceil(len(diskmap) / 2)):
-            blocks += str(id) * int(diskmap[id * 2])
+            blocks.extend([str(id)] * int(diskmap[id * 2]))
             if id * 2 + 1 < len(diskmap):
-                blocks += '.' * int(diskmap[id * 2 + 1])
+                blocks.extend(['.'] * int(diskmap[id * 2 + 1]))
                 
     return blocks
             
 def move_blocks(blocks: str):
-    suffix = '.' * blocks.count('.')
+    nb_empty = blocks.count('.')
+    suffix = ['.'] * nb_empty
 
-    while not blocks.endswith(suffix):
-        first_empty = blocks.find('.')
+    while not blocks[-nb_empty:] == suffix:
+        first_empty = -1
+        for n in range(0, len(blocks)):
+            if blocks[n] == '.':
+                first_empty = n
+                break
+        last_used = -1
         for n in range(len(blocks) - 1, 0, -1):
             if blocks[n] != '.':
-                blocks = blocks[0:first_empty] + blocks[n] + blocks[first_empty+1:n] + '.' + blocks[n+1:]
+                last_used = n
                 break
+        blocks[first_empty], blocks[last_used] = blocks[last_used], blocks[first_empty]
     
     return blocks
 
@@ -36,4 +43,4 @@ def checksum(filename: str):
         
 print("first part:")
 print(checksum('day09/sample2'))
-#print(checksum('day09/input'))
+print(checksum('day09/input'))
