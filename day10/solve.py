@@ -31,13 +31,24 @@ def find_reachable_summits(grid, y: int, x: int):
             summits.extend(find_reachable_summits(grid, y, x-1))
         return summits
 
-def sum_scores(filename: str) -> int:
+def scores(filename: str) -> int:
     grid, trail_heads = load(filename)
     score = 0
     for head in trail_heads:
         score += len(set(find_reachable_summits(grid, head['y'], head['x'])))
     return score
+
+def ratings(filename: str) -> int:
+    grid, trail_heads = load(filename)
+    rating = 0
+    for head in trail_heads:
+        rating += len(find_reachable_summits(grid, head['y'], head['x']))
+    return rating
                 
 print("first part:")
-print(sum_scores('day10/sample'))
-print(sum_scores('day10/input'))
+print(scores('day10/sample'))
+print(scores('day10/input'))
+
+print("second part:")
+print(ratings('day10/sample'))
+print(ratings('day10/input'))
