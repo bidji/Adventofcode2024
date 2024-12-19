@@ -5,7 +5,6 @@ def load(filename: str):
             grid.append(line.strip())
     return grid
 
-
 def next_region(areas: dict[int, int]) -> int:
     if len(areas) == 0:
         return 1
@@ -74,32 +73,17 @@ def get_price(regions, areas, j: int, i: int) -> int:
         price += 1 * area
     return price
 
-def display(regions: list[list[int]], areas: dict):
-    print("regions:")
-    nb_regions = max(areas.keys())
-    for row in regions:
-        if nb_regions < 10:
-            print("".join([str(p) for p in row]))
-        else:
-            print(" ".join([str(p).zfill(2) for p in row]))
-    
-    print("areas:")
-    print(areas)
-            
 def get_prices(filename: str):
     grid = load(filename)
     
-    # define regions in mapped
+    # define regions and areas
     regions, areas = get_regions_areas(grid)
-    
+       
     # sum prices
     prices = 0
     for j in range(0, len(grid)):
-        row_prices = []
         for i in range(0, len(grid[j])):
-            row_prices.append(get_price(regions, areas, j, i))
-        # print(" ".join([str(p).zfill(2) for p in row_prices]))
-        prices += sum(row_prices)
+            prices += get_price(regions, areas, j, i)
     return prices
 
 print("first part:")
