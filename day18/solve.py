@@ -26,17 +26,18 @@ def solve_maze(grid: list[list[str]], logger=None) -> int:
     logger and logger.info(str(maze))
     return maze.walkthrough.g
 
-def search_impossible_maze(filename: str, size: str, steps: int):
+def search_impossible_maze(filename: str, size: str):
     coords = load(filename)
     
-    nb_steps = steps
-    try:
-        while nb_steps < len(coords):
-            print(f"nb steps: {nb_steps}")
+    # starting by the maximum steps as most constrained mazes are faster to solve
+    nb_steps = len(coords)
+    while True:
+        try:
             Maze(build_maze(coords, size, nb_steps)).solve(start=(0, 0), end=(size - 1, size - 1))
-            nb_steps += 1
-    except MazeException:
-        return coords[nb_steps - 1]
+            # no exception raised, we found the last solvable maze
+            return coords[nb_steps]
+        except MazeException:
+            nb_steps -= 1
 
 # logger = logging.getLogger("day18")
 # logging.basicConfig(filename="day18.log", encoding="utf-8", level=logging.DEBUG)
@@ -46,5 +47,5 @@ print(solve_maze(build_maze(load('day18/sample'), 7, 12)))
 print(solve_maze(build_maze(load('day18/input'), 71, 1024)))
 
 print("second part:")
-print(search_impossible_maze('day18/sample', 7, 12))
-print(search_impossible_maze('day18/input', 71, 2500))
+print(search_impossible_maze('day18/sample', 7))
+print(search_impossible_maze('day18/input', 71))
