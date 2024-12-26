@@ -43,7 +43,7 @@ class Node:
                    parent=parent)
     
     def compute(self, exit: Self) -> Self:
-        self.h = abs(exit.x - self.x) + abs(exit.y - self.y)
+        self.h = abs(exit.x - self.x) + abs(exit.y - self.y) + 500
         self.f = self.g + self.h
         return self
         
@@ -59,6 +59,7 @@ class Maze:
     wall: str
     path: str
     walkthrough: Node
+    walkthroughs: list[Node]
     logger: Logger
     
     
@@ -69,12 +70,13 @@ class Maze:
         self.path = path
         self.logger = logger
         self.walkthrough = None
+        self.walkthroughs = []
         
         self.grid = []
         for row in grid:
             self.grid.append(row.copy())
     
-    def solve(self, start: tuple[int, int], end: tuple[int, int]) -> Self:
+    def solve(self, start: tuple[int, int], end: tuple[int, int], findall: bool=False) -> Self:
         """use A* algorithm to solve the maze"""
         opened = [Node(start[0], start[1])]
         closed = []
@@ -86,12 +88,16 @@ class Maze:
             self.logger and self.logger.debug(f"opened: {' | '.join([str(n) for n in opened])}")
             current = opened.pop()
             self.logger and self.logger.debug(f"current: {current}")
-            closed.append(current)
             
             if current == exit:
                 self.logger and self.logger.debug(f"shortest path found: {current}")
-                self.walkthrough = current
-                return self
+                if findall:
+                    self.walkthroughs.append(current)
+                else:
+                    self.walkthrough = current
+                    return self
+            else:
+                closed.append(current)
 
             # try to go up
             if current.y > 0 and self.grid[current.y - 1][current.x] != self.wall:
@@ -100,8 +106,10 @@ class Maze:
                     up.compute(exit)
                     if up not in opened:
                         opened.append(up)
-                    elif up.g < opened[opened.index(up)].g:
-                        if up in opened:
+                    elif up.g <= opened[opened.index(up)].g:
+                        if findall:
+                            opened.append(up)
+                        else:
                             opened[opened.index(up)] = up
             # try to go down
             if current.y < len(self.grid) - 1 and self.grid[current.y + 1][current.x] != self.wall:
@@ -110,8 +118,11 @@ class Maze:
                     down.compute(exit)
                     if down not in opened:
                         opened.append(down)
-                    elif down.g < opened[opened.index(down)].g:
-                        opened[opened.index(down)] = down
+                    elif down.g <= opened[opened.index(down)].g:
+                        if findall:
+                            opened.append(down)
+                        else:
+                            opened[opened.index(down)] = down
             # try to go left
             if current.x > 0 and self.grid[current.y][current.x - 1] != self.wall:
                 left = Node.build(parent=current, incr_x=-1, incr_y=0)
@@ -119,8 +130,11 @@ class Maze:
                     left.compute(exit)
                     if left not in opened:
                         opened.append(left)
-                    elif left.g < opened[opened.index(left)].g:
-                        opened[opened.index(left)] = left
+                    elif left.g <= opened[opened.index(left)].g:
+                        if findall:
+                            opened.append(left)
+                        else:
+                            opened[opened.index(left)] = left
             # try to go right
             if current.x < len(self.grid[current.y]) - 1 and self.grid[current.y][current.x + 1] != self.wall:
                 right = Node.build(parent=current, incr_x=1, incr_y=0)
@@ -128,11 +142,17 @@ class Maze:
                     right.compute(exit)
                     if right not in opened:
                         opened.append(right)
-                    elif right.g < opened[opened.index(right)].g:
-                        opened[opened.index(right)] = right
-                    
-        # didn't find exit
-        raise MazeException()
+                    elif right.g <= opened[opened.index(right)].g:
+                        if findall:
+                            opened.append(right)
+                        else:
+                            opened[opened.index(right)] = right
+        
+        if not findall or len(self.walkthroughs) == 0:
+            # didn't find exit
+            raise MazeException()
+        
+        return self
     
     def __str__(self):
         string = "grid:\n"
@@ -145,6 +165,12 @@ class Maze:
         while current:
             grid[current.y][current.x] = 'O'
             current = current.parent
+            
+        for node in self.walkthroughs:
+            current = node
+            while current:
+                grid[current.y][current.x] = 'O'
+                current = current.parent
         
         for j in range(0, len(grid)):
             string += "".join(grid[j])
