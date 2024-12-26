@@ -17,34 +17,46 @@ def load(filename: str):
     
     return towels, patterns
 
-def is_pattern_buildable(pattern: str, towels: list[str], min: int, cache: set[str]) -> bool:
-    if pattern in cache:
-        return False
+def findall_builds(pattern: str, towels: list[str], min: int, not_buildables: set[str], buildables: dict[str, int]) -> int:
+    if pattern in not_buildables:
+        return 0
     if len(pattern) < min:
-        cache.add(pattern)
-        return False
+        not_buildables.add(pattern)
+        return 0
+    if pattern in buildables:
+        return buildables[pattern]
     
+    nb_builds = 0
     for towel in towels:
         if pattern == towel:
-            return True
-        if pattern.startswith(towel):
-            if is_pattern_buildable(pattern.replace(towel, '', 1), towels, min, cache):
-                return True
-    cache.add(pattern)
-    return False
+            nb_builds += 1
+        elif pattern.startswith(towel):
+            nb_builds += findall_builds(pattern.replace(towel, '', 1), towels, min, not_buildables, buildables)
+            
+    if nb_builds == 0:
+        not_buildables.add(pattern)
+    else:
+        buildables[pattern] = nb_builds
+    return nb_builds
 
-def solve(filename: str):
+def solve(filename: str, findall: bool) -> int:
     towels, patterns = load(filename)
     min = len(towels[-1])
-    cache = set()
+    not_buildables = set()
+    buildables = dict()
     
     nb = 0
     for pattern in patterns:
-        if is_pattern_buildable(pattern, towels, min, cache):
-            nb += 1
-        
+        nb_builds = findall_builds(pattern, towels, min, not_buildables, buildables)
+        if nb_builds > 0:
+            nb += 1 if not findall else nb_builds
+            
     return nb
 
 print("first part:")
-print(solve('day19/sample'))
-print(solve('day19/input'))
+print(solve('day19/sample', findall=False))
+print(solve('day19/input', findall=False))
+
+print("second part:")
+print(solve('day19/sample', findall=True))
+print(solve('day19/input', findall=True))
