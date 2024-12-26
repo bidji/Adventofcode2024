@@ -17,7 +17,7 @@ def load(filename: str):
     
     return towels, patterns
 
-def is_pattern_buildable(built: str, pattern: str, towels: list[str], min: int, cache: set[str]) -> bool:
+def is_pattern_buildable(pattern: str, towels: list[str], min: int, cache: set[str]) -> bool:
     if pattern in cache:
         return False
     if len(pattern) < min:
@@ -28,7 +28,7 @@ def is_pattern_buildable(built: str, pattern: str, towels: list[str], min: int, 
         if pattern == towel:
             return True
         if pattern.startswith(towel):
-            if is_pattern_buildable(built + towel, pattern.replace(towel, '', 1), towels, min, cache):
+            if is_pattern_buildable(pattern.replace(towel, '', 1), towels, min, cache):
                 return True
     cache.add(pattern)
     return False
@@ -39,8 +39,8 @@ def solve(filename: str):
     cache = set()
     
     nb = 0
-    for num, pattern in enumerate(patterns):
-        if is_pattern_buildable('', pattern, towels, min, cache):
+    for pattern in patterns:
+        if is_pattern_buildable(pattern, towels, min, cache):
             nb += 1
         
     return nb
