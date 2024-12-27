@@ -1,27 +1,8 @@
 class Buyer:
     prices: dict[str, int]
-    reverse_prices: dict[int, list[str]]
     
     def __init__(self, prices: dict[str, int]):
         self.prices = prices
-        self.reverse_prices = dict()
-        for k in prices:
-            key = prices[k]
-            if key in self.reverse_prices:
-                self.reverse_prices[key].append(k)
-            else:
-                self.reverse_prices[key] = [k]
-                
-    def get_changes_from(self, value) -> list[str]:
-        return self.reverse_prices[value]
-    
-    def get_changes(self):
-        return self.prices.keys()
-    
-    def get_distinct_prices(self):
-        distinct = [p for p in self.reverse_prices.keys()]
-        distinct.sort(reverse=True)
-        return distinct
 
 def load(filename: str) -> list[int]:
     secrets = []
