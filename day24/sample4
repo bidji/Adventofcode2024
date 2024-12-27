@@ -1,0 +1,35 @@
+x00: 1
+x01: 1
+x02: 0
+x03: 1
+y00: 1
+y01: 0
+y02: 1
+y03: 1
+
+x00 XOR y00 -> z04 (0)
+x00 AND y00 -> rt1 (1)
+
+x01 XOR y01 -> it1 (1)
+it1 XOR rt1 -> z02 (0)
+x01 AND y01 -> ra1 (0)
+x01 AND rt1 -> rb1 (1)
+y01 AND rt1 -> rc1 (0)
+ra1 OR rb1 -> rd1 (1)
+rc1 OR rd1 -> rt2 (1)
+
+x02 XOR y02 -> it2 (1)
+it2 XOR rt2 -> z01 (0)
+x02 AND y02 -> ra2 (0)
+x02 AND rt2 -> rb2 (0)
+y02 AND rt2 -> rc2 (1)
+ra2 OR rb2 -> rd2 (0)
+rc2 OR rd2 -> rt3 (1)
+
+x03 XOR y03 -> it3 (0)
+it3 XOR rt3 -> z03 (1)
+x03 AND y03 -> ra3 (1)
+x03 AND rt3 -> rb3 (1)
+y03 AND rt3 -> rc3 (1)
+ra3 OR rb3 -> rd3 (1)
+rc3 OR rd3 -> z00 (1)
